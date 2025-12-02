@@ -1,9 +1,9 @@
 services:
-  - type: web
-    name: tele-bot-cua-ban
+  - type: worker               # Dùng worker thay vì web → không ngủ nữa
+    name: telegram-bot
     env: python
-    region: singapore
-    plan: free
+    region: singapore          # gần Việt Nam nhất, nhanh nhất
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
+    plan: free                 # miễn phí vĩnh viễn
     autoDeploy: true
