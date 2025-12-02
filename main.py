@@ -2,34 +2,30 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 import asyncio
 import os
-
-# ====================== KEEP-ALIVE SIÊU ỔN ĐỊNH CHO RENDER ======================
+from flask import Flask
 from threading import Thread
-from http.server import BaseHTTPRequestHandler, HTTPServer
 
-class _KeepAliveHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"Bot is alive!")
+# ==================== FLASK KEEP-ALIVE (không 502, không wake up) ====================
+app = Flask(__name__)
 
-def start_keep_alive():
-    port = int(os.environ.get("PORT", 8080))  # Render tự động cấp PORT
-    server = HTTPServer(("", port), _KeepAliveHandler)
-    print(f"[Keep-alive] Server đang chạy trên port {port} – Render sẽ không sleep nữa!")
-    server.serve_forever()
+@app.route("/")
+def home():
+    return "Bot is alive! 🚀", 200
 
-# Bắt đầu keep-alive NGAY LẬP TỨC (phải để trước mọi thứ)
-Thread(target=start_keep_alive, daemon=True).start()
-# ===============================================================================
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    # Render yêu cầu host='0.0.0.0'
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
-# -------------------------- PHẦN BOT TELEGRAM CỦA BẠN --------------------------
+Thread(target=run_flask, daemon=True).start()
+print("[Keep-alive] Flask đang chạy → Render sẽ luôn online 24/7!")
+# ====================================================================================
+
+# ========================== BOT TELEGRAM (aiogram 3) ==========================
 TOKEN = os.getenv("TOKEN")
 
-# Kiểm tra token (tránh lỗi ngớ ngẩn)
 if not TOKEN:
-    print("LỖI: TOKEN không tồn tại! Hãy kiểm tra Environment Variables trên Render.")
+    print("LỖI: TOKEN không tồn tại! Hãy kiểm tra Environment Variables.")
     exit()
 
 bot = Bot(token=TOKEN, parse_mode="HTML")
@@ -39,7 +35,7 @@ dp = Dispatcher()
 async def start(message: types.Message):
     await message.answer(
         "Xin chào! Bot đang chạy 24/7 trên Render đây 🚀\n"
-        "Gõ gì mình rep lại nha!"
+        "Gõ gì mình cũng rep lại nha!"
     )
 
 @dp.message()
@@ -50,7 +46,6 @@ async def main():
     print("Bot Telegram đang khởi động...")
     await dp.start_polling(bot)
 
-# ===============================================================================
-
 if __name__ == "__main__":
     asyncio.run(main())
+# ================================================================================
